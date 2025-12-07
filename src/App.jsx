@@ -37,18 +37,19 @@ import {
 
 // --- CONFIGURATION ---
 
+// 1. Determine the Server URL
+// Reverted to process.env to fix ES2015 target compatibility issues
 const isProduction = typeof process !== 'undefined' && process.env.NODE_ENV === 'production';
 const BASE_URL = isProduction ? "" : "http://localhost:5000";
 
 const getPublicEnv = (key) => {
   try {
+    // Standard process.env check which works with most bundlers (Vite/Webpack)
     if (typeof process !== 'undefined' && process.env) {
       return process.env[key];
     }
-    return "";
-  } catch (e) {
-    return "";
-  }
+  } catch (e) {}
+  return "";
 };
 
 const RAZORPAY_KEY_ID = getPublicEnv("VITE_RAZORPAY_KEY_ID");
@@ -59,9 +60,10 @@ let app, auth, db;
 
 const loadFirebaseConfig = () => {
   try {
-    if (getPublicEnv("VITE_FIREBASE_API_KEY")) {
+    const apiKey = getPublicEnv("VITE_FIREBASE_API_KEY");
+    if (apiKey) {
       return {
-        apiKey: getPublicEnv("VITE_FIREBASE_API_KEY"),
+        apiKey: apiKey,
         authDomain: getPublicEnv("VITE_FIREBASE_AUTH_DOMAIN"),
         projectId: getPublicEnv("VITE_FIREBASE_PROJECT_ID"),
         storageBucket: getPublicEnv("VITE_FIREBASE_STORAGE_BUCKET"),
@@ -70,6 +72,7 @@ const loadFirebaseConfig = () => {
         measurementId: getPublicEnv("VITE_FIREBASE_MEASUREMENT_ID")
       };
     }
+    // Fallback for some specific runtime environments
     if (typeof __firebase_config !== 'undefined') {
       return typeof __firebase_config === 'string' ? JSON.parse(__firebase_config) : __firebase_config;
     }
@@ -128,7 +131,6 @@ const createSong = (id, title, artist, genre, mood, year, cover, url, plays, isT
 });
 
 const SONGS = [
-  // --- TRENDING TOP PICKS ---
   createSong(1, "Illuminati", "Sushin Shyam", "Malayalam", "Party", "2024", "https://c.saavncdn.com/004/Illuminati-From-Aavesham-Malayalam-2024-20240328131644-500x500.jpg", "/songs/Illuminati.mp3", "10M", true),
   createSong(2, "Manasilayo", "Anirudh", "Tamil", "Dance", "2024", "https://i.scdn.co/image/ab67616d0000b273da8d29ecfc096bb69dff7ac1", "/songs/Manasilaayo.mp3", "8.5M", true),
   createSong(3, "Chaleya", "Arijit Singh", "Hindi", "Romance", "2023", "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/1e/ff/32/1eff3216-190d-6fd9-8f68-acbba846e6ee/8903431956026_cover.jpg/1200x1200bf-60.jpg", "/songs/Chaleya.mp3", "15M", true),
@@ -139,8 +141,6 @@ const SONGS = [
   createSong(88, "Die With A Smile", "Lady Gaga", "English", "Chill", "2024", "https://tse4.mm.bing.net/th/id/OIP.X_4L8I0ajd8P8TCEsWSSAAHaHa?cb=ucfimg2&ucfimg=1&rs=1&pid=ImgDetMain&o=7&rm=3", "/songs/Die With A Smile.mp3", "18M", true),
   createSong(7, "Chuttamalle", "Thaman S", "Malayalam", "Dance", "2024", "https://sonichits.com/image/aHR0cHM6Ly9sYXN0Zm0uZnJlZXRscy5mYXN0bHkubmV0L2kvdS8zMDB4MzAwL2JhMDk5MmY5ZDgzZmNiNTZjODQxMWZkN2M1YWRkZDY2LnBuZw", "/songs/Chuttamalle.mp3", "2M", true),
   createSong(8, "Sajini", "Arijit Singh", "Hindi", "Happy", "2024", "https://i.ytimg.com/vi/jVdZnpRwquI/maxresdefault.jpg", "/songs/Sajini.mp3", "1M", true),
-
-  // --- MALAYALAM ---
   createSong(26, "Manju Pole", "Mohan Sithara", "Malayalam", "Chill", "2000", "https://a10.gaanacdn.com/gn_img/albums/ogNWkDbmXJ/gNWkvnwJ3m/size_l.jpg", "/songs/Manju Pole.mp3", "10M", false),
   createSong(27, "Punchiri Thanchum", "Gopi Sundar", "Malayalam", "Romance", "2015", "https://i.ytimg.com/vi/CJV06zZ-x38/hq720_2.jpg?sqp=-oaymwEYCMQFENAFSFryq4qpAwoIARUAAIhC0AEB&rs=AOn4CLD-f2LzR8tsM-RJr532oaDIt-ow4g", "/songs/Punchiri Thanchum.mp3", "5M", false),
   createSong(28, "Premavathi", "Jakes Bejoy", "Malayalam", "Romance", "2019", "https://bharatlyrics.com/wp-content/uploads/2025/10/Premavathi.jpg", "/songs/Premavathi.mp3", "15M", false),
@@ -167,8 +167,6 @@ const SONGS = [
   createSong(50, "Galatta", "Sushin Shyam", "Malayalam", "Party", "2024", "https://c.saavncdn.com/858/Aavesham-Malayalam-2024-20240514204401-500x500.jpg", "/songs/Galatta.mp3", "30M",false),
   createSong(51, "Etho Mazhayil", "Ouseppachan", "Malayalam", "Rain", "2009", "https://a10.gaanacdn.com/gn_img/albums/VdNW0JMKo5/dNW0oBeX3o/size_m_1547120934.jpg", "/songs/Etho Mazhayil.mp3", "31M",false),
   createSong(52, "Pularan Nearam", "Unknown", "Malayalam", "Morning", "2021", "https://tse2.mm.bing.net/th/id/OIP.9dCPZqzuCwkk2hrl_jvLnQHaJ4?cb=ucfimg2&ucfimg=1&rs=1&pid=ImgDetMain&o=7&rm=3", "/songs/Pularan Nearam.mp3", "32M",false),
-
-   // --- TAMIL ---
   createSong(53, "Thalapathy Kacheri", "Anirudh", "Tamil", "Party", "2024", "https://img-s-msn-com.akamaized.net/tenant/amp/entityid/AA1Q3Ear.img?w=700&h=400&m=6&x=9&y=17&s=635&d=273", "/songs/Thalapathy Kacheri.mp3"),
   createSong(54, "Oorum Blood", "Santhosh Narayanan", "Tamil", "Workout", "2023", "https://c.saavncdn.com/091/Oorum-Blood-From-Dude-Tamil-2025-20250828160021-500x500.jpg", "/songs/Oorum Blood.mp3"),
   createSong(55, "Monica", "Harris Jayaraj", "Tamil", "Romance", "2008", "https://saregamalu.com/wp-content/uploads/2025/07/Monica-song-lyrics-1024x576.jpg", "/songs/Monica.mp3"),
@@ -179,8 +177,6 @@ const SONGS = [
   createSong(60, "Hey Minnale", "Harris Jayaraj", "Tamil", "Romance", "2003", "https://i.scdn.co/image/ab67616d0000b273d29a8598a39461ddb2a15953", "/songs/Hey Minnale.mp3"),
   createSong(61, "Rise of Dragon", "Unknown", "Tamil", "Focus", "2024", "https://c.saavncdn.com/236/Dragon-Tamil-2025-20250221231203-500x500.jpg", "/songs/Rise of Dragon.mp3"),
   createSong(62, "Paththavaikkum", "Anirudh", "Tamil", "Dance", "2022", "https://i.scdn.co/image/ab67616d0000b2732b4185706c90b7f1435496c8", "/songs/Paththavaikkum.mp3"),
-
-  // --- HINDI ---
   createSong(65, "Tenu Sang Rekhna", "Arijit Singh", "Hindi", "Romance", "2022", "https://c.saavncdn.com/415/Tenu-Sang-Rakhna-From-Jigra-Hindi-2024-20241003174013-500x500.jpg", "/songs/Tenu Sang Rekhna.mp3"),
   createSong(66, "Mere Sohneya", "Sachet Tandon", "Hindi", "Happy", "2019", "https://c.saavncdn.com/679/Mere-Sohneya-From-Kabir-Singh--Hindi-2019-20190606024538-500x500.jpg", "/songs/Mere Sohneya.mp3"),
   createSong(67, "Pal", "Arijit Singh", "Hindi", "Sad", "2018", "https://i.ytimg.com/vi/d9N7gMMjDzs/maxresdefault.jpg", "/songs/Pal.mp3"),
@@ -194,8 +190,6 @@ const SONGS = [
   createSong(75, "Tere Pyaar Mein", "Arijit Singh", "Hindi", "Party", "2023", "https://c.saavncdn.com/367/Tere-Pyaar-Mein-From-Tu-Jhoothi-Main-Makkaar-Hindi-2023-20230203140532-500x500.jpg", "/songs/Tere Pyaar Mein.mp3"),
   createSong(76, "Pehle Bhi Main", "Vishal Mishra", "Hindi", "Romance", "2023", "https://i.scdn.co/image/ab67616d0000b2737b8bd612f9e2385b190049ad", "/songs/Pehle Bhi Main.mp3"),
   createSong(78, "Vaaste", "Dhvani Bhanushali", "Hindi", "Pop", "2019", "https://i1.sndcdn.com/artworks-000596180771-gehlm5-t500x500.jpg", "/songs/Vaaste.mp3"),
-
-  // --- ENGLISH ---
   createSong(79, "Sao Paulo", "The Weeknd", "English", "Dark", "2024", "https://img.youtube.com/vi/2kjolTLZ_Mg/maxresdefault.jpg", "/songs/Sao Paulo.mp3"),
   createSong(80, "I Think They Call This Love", "Elliot James", "English", "Romance", "2024", "https://tse2.mm.bing.net/th/id/OIP.2bKncX2GLV6XtXX_Nc2argHaHa?cb=ucfimg2&ucfimg=1&rs=1&pid=ImgDetMain&o=7&rm=3", "/songs/I Think They Call This Love.mp3"),
   createSong(81, "All The Stars", "Kendrick Lamar", "English", "Chill", "2018", "https://th.bing.com/th/id/OIP.kO8_x1tMbsH-q5_GjNQ0ZQAAAA?o=7&cb=ucfimg2&rm=3&ucfimg=1&rs=1&pid=ImgDetMain&o=7&rm=3", "/songs/All The Stars.mp3"),
