@@ -83,6 +83,8 @@ try {
       app = initializeApp(config);
       auth = getAuth(app);
       db = getFirestore(app);
+  } else {
+      console.warn("Firebase credentials missing. Auth features will not work.");
   }
 } catch (error) {
   console.error("Firebase Init Error", error);
@@ -588,46 +590,56 @@ export default function MusifyApp() {
   const handleEmailAuth = async (e) => {
       e.preventDefault();
       setIsAuthLoading(true);
-      setAuthError(""); // Clear previous errors
-      if (auth) {
-          try {
-              let userCred;
-              if (isLogin) {
-                  userCred = await signInWithEmailAndPassword(auth, email, password);
-              } else {
-                  userCred = await createUserWithEmailAndPassword(auth, email, password);
-                  await updateFirebaseProfile(userCred.user, { displayName: username });
-                  if(db) {
-                      await setDoc(doc(db, 'artifacts', 'musify-app', 'users', userCred.user.uid, 'profile', 'profileDoc'), {
-                          name: username,
-                          email: email,
-                          joinedAt: Date.now(),
-                          playlists: [],
-                          likedSongs: []
-                      });
-                  }
+      setAuthError(""); 
+      
+      if (!auth) {
+          setAuthError("Firebase configuration missing. Please check your .env keys.");
+          setIsAuthLoading(false);
+          return;
+      }
+
+      try {
+          let userCred;
+          if (isLogin) {
+              userCred = await signInWithEmailAndPassword(auth, email, password);
+          } else {
+              userCred = await createUserWithEmailAndPassword(auth, email, password);
+              await updateFirebaseProfile(userCred.user, { displayName: username });
+              if(db) {
+                  await setDoc(doc(db, 'artifacts', 'musify-app', 'users', userCred.user.uid, 'profile', 'profileDoc'), {
+                      name: username,
+                      email: email,
+                      joinedAt: Date.now(),
+                      playlists: [],
+                      likedSongs: []
+                  });
               }
-          } catch (error) {
-              setAuthError(getErrorMessage(error.code)); // Set error state for UI display
-          } finally {
-              setIsAuthLoading(false);
           }
+      } catch (error) {
+          setAuthError(getErrorMessage(error.code)); 
+      } finally {
+          setIsAuthLoading(false);
       }
   };
 
   const handleGoogleLogin = async () => {
       setIsAuthLoading(true);
       setAuthError("");
-      if (auth) {
-          try {
-              const provider = new GoogleAuthProvider();
-              await signInWithPopup(auth, provider);
-          } catch (error) {
-              console.error("Google Auth Error:", error);
-              setAuthError(getErrorMessage(error.code));
-          } finally {
-              setIsAuthLoading(false);
-          }
+      
+      if (!auth) {
+          setAuthError("Firebase configuration missing.");
+          setIsAuthLoading(false);
+          return;
+      }
+
+      try {
+          const provider = new GoogleAuthProvider();
+          await signInWithPopup(auth, provider);
+      } catch (error) {
+          console.error("Google Auth Error:", error);
+          setAuthError(getErrorMessage(error.code));
+      } finally {
+          setIsAuthLoading(false);
       }
   };
 
@@ -656,6 +668,9 @@ export default function MusifyApp() {
         } catch (error) { 
             setAuthError("Guest login failed. Please try again.");
         } finally { setIsAuthLoading(false); }
+    } else {
+         setAuthError("Service unavailable. Check configuration.");
+         setIsAuthLoading(false);
     }
   };
 
